@@ -1,6 +1,6 @@
 This code allows one to pool over a set of emmeans objects.
 
-# 0) Introduction to the problem
+# Introduction to the problem
 
 Assume you work with missing  data imputed via mice.
 Then, you want to apply a statistical model from a package which is partially supported by the emmeans package.
