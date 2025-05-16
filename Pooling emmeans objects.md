@@ -14,7 +14,8 @@ Normally it's fitted using the Generalized Least Squares (GLS) estimation, but s
 So instead of using the `nlme::gls()` or `mmrm::mmrm()` routines, I employ the best (to me) and most flexible package for GEE estimation: `glmtoolbox::glmgee`
 /
 
-To create an emmean object, I want the robust, bias-corrected estimator of empirical covariance (clustered sandwich with enhancements).
+To create an emmean object, I want the robust, [Mancl-deRouen bias-corrected estimator of empirical covariance](http://www.stat.yale.edu/~lc436/papers/Mancl_DeRouen2001.pdf).
+
 In emmeans I can provide the `vcov = vcov(m, type = "bias-corrected")` parameter, but how to manage the fact that the analyses are pooled?
 
 Let me show you an example.
