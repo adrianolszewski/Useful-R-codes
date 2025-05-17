@@ -280,7 +280,7 @@ Notice also the negative bounds of the confidence intervals (CIs).
 Again - no surprise. These are Wald's CIs, whih are symmetric on the current scale.
 The predicted probability was 0, the SE is non-zero, so the CIs must take some "space", and since it's symmetric - it "hooked" the negative side.
 
-We can fix this by computing the CIs on the linear-predictor scale and then back-tranform them on the response scale by replacing `regrid="response"` into "type="response"'.
+We can fix this by computing the CIs on the linear-predictor scale and then back-tranform them on the response scale by replacing `regrid="response"` into `"type="response"`.
 
 # 3) Fitting the Firth-like penalised GEE logistic regression
 
@@ -382,7 +382,7 @@ Let's compare:
 | Baseline  | Control | 33.3      | 33.4          |
 | T1        | Active  | 55.6      | 58.5          |
 | T1        | Control | 22.2      | 24.3          |
-| T2        | Active  | 0.0       | 1.5 (artif.)  |
+| T2        | Active  | 0.0       | 1.5 (artifact)|
 | T2        | Control | 5.9       | 7.5           |
 (all others are just artifacts).
 
