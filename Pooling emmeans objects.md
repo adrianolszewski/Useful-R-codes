@@ -1,4 +1,4 @@
-# Pooling emmeans objects obtained from the "mice" package
+# Pooling multiple emmeans objects (under multiple imputation e.g. through the "mice" package)
 
 This code allows one to pool over a set of already prepared emmeans objects under multiple imputation (mice).
 This is especially useful for dealing with models unsupported by the emmeans directly, where we need to use the `qdrg()` function.
