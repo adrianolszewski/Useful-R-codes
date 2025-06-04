@@ -1,6 +1,9 @@
-This code allows one to pool over a set of emmeans objects.
+# Pooling emmeans objects obtained from the "mice" package
 
-# Introduction to the problem
+This code allows one to pool over a set of already prepared emmeans objects under multiple imputation (mice).
+This is especially useful for dealing with models unsupported by the emmeans directly, where we need to use the `qdrg()` function.
+
+## Introduction to the problem
 
 Assume you work with missing  data imputed via mice.
 Then, you want to apply a statistical model from a package which is partially supported by the emmeans package.
@@ -70,7 +73,7 @@ Each patient has three visits at which the PainScore is assessed. **Let's perfor
 / _(let's assume, just for the sake of simplicity, that PainScore is a numerical endpoint, meaningfully sumamrized with arithmetic means)._ /
 
 
-# 1) Imputation
+## 1) Imputation
 Don't take this much seriously, it's just an illustration.
 
 ```{r}
@@ -84,7 +87,7 @@ Don't take this much seriously, it's just an illustration.
 > imp_list <- complete(imp, "all") # we will need this later
 ```
 
-# 2) Fitting GEE model and creating the emmeans objects
+## 2) Fitting GEE model and creating the emmeans objects
 
 Let's start with the simplest approach to better illustrate what we want to achieve.
 
@@ -242,7 +245,7 @@ Confidence level used: 0.95
 
 Now, having the list of emmeans objects, we want to pool them according to Rubin's rules and the Barnard's small-sample method for pooling the degrees of freedom. We will slightly adjust the code implemented in the `emmeans:::emm_basis.mira()` function:
 
-# 3) The pool_emmeans() function
+## 3) The pool_emmeans() function
 ```{r}
 pool_emmeans <- function(emmeans_list) {
   bas = emmeans_list[[1]]
@@ -276,7 +279,7 @@ pool_emmeans <- function(emmeans_list) {
 }
 ```
 
-# 4) Let's pool the emmeans objects and calculate the same contrasts as previously
+## 4) Let's pool the emmeans objects and calculate the same contrasts as previously
 ```{r}
 > (pooled_ems <- pool_emmeans(my_emmeans_per_arm))
 
