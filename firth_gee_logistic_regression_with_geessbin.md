@@ -1,3 +1,5 @@
+# Firth-like penalised GEE-fit logistic regression (for repeated observations e.g. in longitudinal studies) in R
+
 This code allows one to test contrasts in longitudinal studies with binary endpoint under small trial size and small prevalence (low fraction of the recorded events).
 Normally you would fit a logistic regression using **GEE** (_Generalized Estimating Equations_) to obtain population-average estimates (like in clinical trials), 
 or **GLMM** (_Generalized Linear Mixed Model_) to obtain conditional, subject-specific estimates. **But this is likely to fail under very small number of events.**
