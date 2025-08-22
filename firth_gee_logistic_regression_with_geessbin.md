@@ -13,9 +13,9 @@ Used packages:
 
 # Introduction to the problem
 
-Let's assume that you analyse a longitudinal clinical trial with a binary enpoint. _Longitudinal_ means that observations were made for each study subject (patient) multiple times, at subsequent timepoints (e.g. study visits).
-Your goal is to compare the fraction (%) of some event between the treatment arms (groups). For example, you may want to compare the % of (somehow defined) **clinical successes** between the new investigated treatment and some standard of care.
-You may also want to adjust these estimates for some numerical covariates, test interactions, etc. In general - **you may want to test hypotheses**.
+Let's assume that you analyse a longitudinal clinical trial with a binary endpoint. _Longitudinal_ means that observations were made for each study subject (patient) multiple times, at subsequent timepoints (e.g. study visits).
+Your goal is to formally compare the fraction (%) of some event between the treatment arms (groups) through a hypothesis test. For example, you may want to compare the % of (somehow defined) **clinical successes** between the new investigated treatment and some standard of care.
+You may also want to adjust these estimates for some numerical covariates, test interactions, etc.
 
 **But the problem is that the study is small **(say N=20 patients per arm) and also **the % of events is very small at certain timepoints** (like 1-5) **or even drops to zero** over time.
 
