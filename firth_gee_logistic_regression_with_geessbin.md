@@ -24,7 +24,7 @@ In other words:
 - quasi separation = some combination of predictors perfectly predicts the outcome in parts of the data
 - full separation = a predictor completely determines the outcome (e.g., group A has only 0s, group B has only 1s).
 
-In either case, the classic logistic regression may either be biased or not converge and you may notice warning or error messages thrown by the estimation procesure like: `iterations limit exceeded` or `fitted probabilities numerically 0 or 1 occurred`.
+In either case, the classic logistic regression may either be biased or not converge and you may notice warning or error messages thrown by the estimation procedure like: `iterations limit exceeded` or `fitted probabilities numerically 0 or 1 occurred`.
 
 That's because for full separation the Maximum Likelihood Estimation (MLE) fails: the model tries to assign infinite-heading coefficients (log-odds -> ±∞) to match the perfect separation, which leads to non-convergence. For the quasi separation the situation ends up with unstable estimates for the predictors - when you look at the coefficients table, some estimates are infinite (or close to it) or even missing from the printout (depending on the implementation). The corresponding standard errors may be huge. You will notice it for sure!
 
