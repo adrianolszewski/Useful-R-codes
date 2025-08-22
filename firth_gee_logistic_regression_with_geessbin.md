@@ -34,9 +34,9 @@ There are various approaches to this problem, e.g. via:
 - Bayesian logistic regression
 - independent exact tests (Fisher, Boschloo, Barnard - depending on your case!); they don't allow for interactions and covariate adjustments.
 
-We will focus on the Firth approach, but in an unusual manner - applied to GEE.
-Why unusual? Because the penalisation is applied to the likelihood function. There is no such thing in GEE, which a semi-parametric method.
-This is why we call it "Firth-like".
+Here I will focus on the Firth approach, but in an unusual manner - applied to the GEE estimation, necessary to handle correlated (repeated) responses. The penalisation is applied to the likelihood function, but there's no such thing in GEE, which a semi-parametric method. This is why we call it "Firth-like".
+
+/ 💡 You might be interested also in a mixed model (GLMM) instead of GEE, but in my field we prefer the marginal rather than conditional approach. /
 
 Let's have a look at an exemplary text in the statistical report:
 
