@@ -191,8 +191,11 @@ Not only the number of events is low, but also drops to zero since the T2 visit.
 # 2) Fitting the classic GEE logistic regression
 
 Let's fit the classic logistic regression.
-Notice, that for "unstructured" covariance it won't even complete, saying  `Error in solve.default(Vi) : system is computationally singular: reciprocal condition number = 6.25574e-17`.
-So we need to simplify the structure to AR(1).
+
+*Notice: for "unstructured" covariance it won't even complete, saying  `Error in solve.default(Vi) : system is computationally singular: reciprocal condition number = 6.25574e-17`. So we need to simplify the structure to AR(1).
+
+PS: here I obtain a MEM (marginal effect at mean age) estimate, which isn't fully correct; Instead I should use AME (average marginal effect), but this would involving additional procedures (for marginal effects), like [marginaleffect](https://marginaleffects.com/) or [modelbased](https://easystats.github.io/modelbased/). I wanted to keep it simple (through [emmeans](https://rvlenth.github.io/emmeans/)). You should adjust it to meet your needs.*
+
 
 ```{r}
 > library(glmtoolbox)
