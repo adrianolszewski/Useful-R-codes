@@ -449,13 +449,13 @@ Remember!
 Be mad at me, but I definitely prefer the non-traditional second approach...
 Just to show you what I mean above:
 ```r
-dat <- imp_list[[1]]
+> dat <- imp_list[[1]]
 
-MASS_polr         <- MASS::polr(formula = PainScore~Visit * Arm, data = dat) # Doesn't account for repeated observations!
-repolr_repolr     <- repolr::repolr(formula  = PainScore ~ Visit * Arm, subjects = "ID", categories = 6, corr.mod = "independence", times = c(1,2,3), data=dat)
-multgee_ordLORgee <- ordLORgee(formula  = PainScore ~ Visit * Arm, id = ID, data = dat, repeated = Visit,  LORstr = "independence", link = "logit")
+> MASS_polr         <- MASS::polr(formula = PainScore~Visit * Arm, data = dat) # Doesn't account for repeated observations!
+> repolr_repolr     <- repolr::repolr(formula  = PainScore ~ Visit * Arm, subjects = "ID", categories = 6, corr.mod = "independence", times = c(1,2,3), data=dat)
+> multgee_ordLORgee <- ordLORgee(formula  = PainScore ~ Visit * Arm, id = ID, data = dat, repeated = Visit,  LORstr = "independence", link = "logit")
 
-cbind("MASS::polr"         = c(MASS_polr$zeta, coef(MASS_polr)), 
+> cbind("MASS::polr"         = c(MASS_polr$zeta, coef(MASS_polr)), 
       "repolr::repolr"     = coef(repolr_repolr),
       "multgee::ordLORgee" = coef(multgee_ordLORgee)) 
 
@@ -479,7 +479,7 @@ Whether you will leave the original coefficients or multiply "betas" *(-1) is up
 
 ```r
 # --- GEE ordinal logistic regression
-emmeans_per_arm_gee1 <- lapply(imp_list, 
+> emmeans_per_arm_gee1 <- lapply(imp_list, 
                           function(dat) {
 
                             m <- ordLORgee(formula  = PainScore ~ Visit * Arm,
@@ -505,7 +505,7 @@ emmeans_per_arm_gee1 <- lapply(imp_list,
                           })
 
 # --- Mixed ordinal logistic regression
-emmeans_per_arm_repolr <- lapply(imp_list, 
+> emmeans_per_arm_repolr <- lapply(imp_list, 
                                  function(dat) {
                                    num_of_levels     <- length(levels(dat$PainScore))
 
@@ -530,10 +530,10 @@ emmeans_per_arm_repolr <- lapply(imp_list,
                                    emmeans(m_grid, specs = ~Arm * Visit, adjust="none")
                                  })
 
-pooled_emmeans_per_arm_gee1   <- pool_emmeans(emmeans_per_arm_gee1)
-pooled_emmeans_per_arm_repolr <- pool_emmeans(emmeans_per_arm_repolr)
+> pooled_emmeans_per_arm_gee1   <- pool_emmeans(emmeans_per_arm_gee1)
+> pooled_emmeans_per_arm_repolr <- pool_emmeans(emmeans_per_arm_repolr)
 
-update(contrast(pooled_emmeans_per_arm_gee1,
+> update(contrast(pooled_emmeans_per_arm_gee1,
                 list(                        # V1    V2    V3
                   "Visit1 : A vs. B" = c( 1,-1,  0, 0,  0, 0),
                   "Visit2 : A vs. B" = c( 0 ,0,  1,-1,  0, 0),
@@ -541,13 +541,31 @@ update(contrast(pooled_emmeans_per_arm_gee1,
                 )),
        adjust="mvt", level = 0.95, infer = c(TRUE, TRUE))
 
-update(contrast(pooled_emmeans_per_arm_repolr,
+ contrast         estimate   SE   df lower.CL upper.CL t.ratio p.value
+ Visit1 : A vs. B  -2.1624 1.05 3304    -4.68    0.351  -2.051  0.1143
+ Visit2 : A vs. B   0.0718 1.08  193    -2.53    2.672   0.066  0.9998
+ Visit3 : A vs. B   1.8100 1.18  109    -1.05    4.671   1.530  0.3308
+
+Confidence level used: 0.95 
+Conf-level adjustment: mvt method for 3 estimates 
+P value adjustment: mvt method for 3 tests 
+
+> update(contrast(pooled_emmeans_per_arm_repolr,
                 list(                        # V1    V2    V3
                   "Visit1 : A vs. B" = c( 1,-1,  0, 0,  0, 0),
                   "Visit2 : A vs. B" = c( 0 ,0,  1,-1,  0, 0),
                   "Visit3 : A vs. B" = c( 0, 0,  0, 0,  1,-1)
                 )),
        adjust="mvt", level = 0.95, infer = c(TRUE, TRUE))
+
+ contrast         estimate   SE   df lower.CL upper.CL t.ratio p.value
+ Visit1 : A vs. B  -2.1561 1.05 3148    -4.66    0.353  -2.047  0.1147
+ Visit2 : A vs. B   0.0762 1.04  153    -2.42    2.572   0.073  0.9998
+ Visit3 : A vs. B   1.8149 1.18  114    -1.04    4.666   1.538  0.3250
+
+Confidence level used: 0.95 
+Conf-level adjustment: mvt method for 3 estimates 
+P value adjustment: mvt method for 3 tests 
 ```
 
 OK, we did it!
