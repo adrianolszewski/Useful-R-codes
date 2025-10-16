@@ -16,7 +16,11 @@ Well, this is gets complicated now.
 
 Let me show you a few examples on how to handle it with a custom-written function `pool_emmeans()` just reproducing the existing [`emmeans:::emm_basis.mira()`](https://github.com/rvlenth/emmeans/blob/8d5ec91fd560c622dabf904886cd0bfe2e1d83d7/R/multiple-models.R#L153) function.
 
-## Example 1: GEE-fit MMRM (for continuous data)
+List of examples:
+1. [GEE-fit MMRM for numerical data](https://github.com/adrianolszewski/Useful-R-codes/blob/main/Pooling%20emmeans%20objects.md#example-1-gee-fit-mmrm-for-numerical-data)
+2. [GEE-fit longitudinal model for ordinal data](https://github.com/adrianolszewski/Useful-R-codes/blob/main/Pooling%20emmeans%20objects.md#example-2-gee-fit-longitudinal-model-for-ordinal-data)
+
+## Example 1: GEE-fit MMRM (for numerical data)
 
 In this example I'm going to use the GEE estimation to fit a specific general linear model for repeated observations - the **GEE-fit MMRM** _with some adjustments_.
 
