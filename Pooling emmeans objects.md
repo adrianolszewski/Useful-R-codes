@@ -5,28 +5,42 @@ This is especially useful for dealing with models unsupported by the emmeans dir
 
 ## Introduction to the problem
 
-Assume you work with missing  data imputed via mice.
-Then, you want to apply a statistical model from a package which is partially supported by the emmeans package.
+Assume you work with missing data imputed via `mice`.
+
+You want to apply a statistical model from a package which is partially supported by the emmeans package.
 "Partially" means that the emmean object can be succesfully created, but not all features of the package are easily accessible from the emmeans interface if operating directly on imputed datasets.
 
-Let me show you an example where I use GEE estimation method to fit a simple linear general linear model for repeated observations.
-Let's say it's a GEE-fitted MMRM.
+Or worse - the implementation of the model or estimation procedure you need **is not directly suported by the emmeans and mice-pooling** at all.
+In this case you need to go through the `qdrg()` --> `emmeans()` chain. But about pooling the model coefficients, the (co)variance matrix, or the ready emmeans?
+Well, this is gets complicated now.
 
-/ Side note: MMRM stands for Mixed Model for Repeated Measurements. Despite its name it's a fixed-effect only model accounting for within-subject correlations and potential heteroscedasticity.
-Normally it's fitted using the Generalized Least Squares (GLS) estimation, but since the normality of normalized residuals is compromised, I want to employ GEE, which does not need this assumption for valid asymptotic inference.
+Let me show you a few examples on how to handle it with a custom-written function `pool_emmeans()` just reproducing the existing [`emmeans:::emm_basis.mira()`](https://github.com/rvlenth/emmeans/blob/8d5ec91fd560c622dabf904886cd0bfe2e1d83d7/R/multiple-models.R#L153) function.
+
+## Example 1: GEE-fit MMRM (for continuous data)
+
+In this example I'm going to use the GEE estimation to fit a specific general linear model for repeated observations - the **GEE-fit MMRM** _with some adjustments_.
+
+/ Side explanations: 
+MMRM stands for _Mixed Model for Repeated Measurements_.
+Despite its name it's a fixed-only effect model accounting for within-subject correlations and potential heteroscedasticity.
+Normally it's fitted through the _Generalized Least Squares (GLS)_, but here let's pretend that the normality of normalized residuals is compromised.
+So I switch GLS with GEE, which does not need normal residuals for valid asymptotic inference.
+
 So instead of using the `nlme::gls()` or `mmrm::mmrm()` routines, I employ the best (to me) and most flexible package for GEE estimation: `glmtoolbox::glmgee`
 /
 
-To create an emmean object, I want the robust, [Mancl-deRouen bias-corrected estimator of empirical covariance](http://www.stat.yale.edu/~lc436/papers/Mancl_DeRouen2001.pdf).
+To account for relatively small sample size, I will take the advantage of the robust [Mancl-deRouen bias-corrected estimator of empirical covariance](http://www.stat.yale.edu/~lc436/papers/Mancl_DeRouen2001.pdf), which was invented precisely for such scenarios.
 
-In emmeans I can provide the `vcov = vcov(m, type = "bias-corrected")` parameter, but how to manage the fact that the analyses are pooled?
+"But where's the problem?" you may ask. In emmeans you can provide the `vcov = vcov(m, type = "bias-corrected")` parameter.
 
-Let me show you an example.
+Yes, this is true, but now we will deal with imputed datasets, the analyses (coefficients or emmeans) need to pooled for the final contrast testing, so the question is "_at which moment should we use it?_"
+
+Let me show you a way that worked for me, step by step.
 
 -----------------
 
-First, the data:
-```{r}
+### 1. First, the data:
+```r
 > d <- structure(list(ID = structure(c(1L, 1L, 1L, 2L, 2L, 2L, 3L, 3L, 
 3L, 4L, 4L, 4L, 5L, 5L, 5L, 6L, 6L, 6L, 7L, 7L, 7L, 8L, 8L, 8L, 
 9L, 9L, 9L, 10L, 10L, 10L, 11L, 11L, 11L, 12L, 12L, 12L, 13L, 
@@ -73,10 +87,10 @@ Each patient has three visits at which the PainScore is assessed. **Let's perfor
 / _(let's assume, just for the sake of simplicity, that PainScore is a numerical endpoint, meaningfully sumamrized with arithmetic means)._ /
 
 
-## 1) Imputation
+### 2. The imputation
 Don't take this much seriously, it's just an illustration.
 
-```{r}
+```r
 > library(mice)
 
 > imp <- mice(d, m=5)
@@ -87,12 +101,12 @@ Don't take this much seriously, it's just an illustration.
 > imp_list <- complete(imp, "all") # we will need this later
 ```
 
-## 2) Fitting GEE model and creating the emmeans objects
+### 3. Fitting a GEE model and creating corresponding emmeans objects
 
 Let's start with the simplest approach to better illustrate what we want to achieve.
 
 Let's fit the models on the imputed datasets.
-```{r}
+```r
 > my_models_per_arm <- with(imp, glmgee(PainScore ~ Visit * Arm, 
                                       family = gaussian(link = "identity"), 
                                       id = ID,  
@@ -188,6 +202,8 @@ So what stops us from combining the two?
 Well, there is no just a single specific model to refer to but a rather **a list of them**.
 And the _emmeans_ object **already contains pooled estimates**.
 
+### 4. An alternative way...
+
 Let's try another approach. We will:
 1) iterate over the list of the imputed datasets,
 2) in each iteration - fit a model to each dataset,
@@ -243,10 +259,10 @@ Covariance estimate used: user-supplied
 Confidence level used: 0.95
 ```
 
-Now, having the list of emmeans objects, we want to pool them according to Rubin's rules and the Barnard's small-sample method for pooling the degrees of freedom. We will slightly adjust the code implemented in the `emmeans:::emm_basis.mira()` function:
+Now, having the list of emmeans objects, we want to pool them according to Rubin's rules and the Barnard's small-sample method for pooling the degrees of freedom. We will slightly adjust the code implemented in the [`emmeans:::emm_basis.mira()`](https://github.com/rvlenth/emmeans/blob/8d5ec91fd560c622dabf904886cd0bfe2e1d83d7/R/multiple-models.R#L153) function:
 
-## 3) The pool_emmeans() function
-```{r}
+### 5. The pool_emmeans() function
+```r
 pool_emmeans <- function(emmeans_list) {
   bas = emmeans_list[[1]]
   k = length(emmeans_list)
@@ -279,8 +295,8 @@ pool_emmeans <- function(emmeans_list) {
 }
 ```
 
-## 4) Let's pool the emmeans objects and calculate the same contrasts as previously
-```{r}
+### 6. Pooling the emmeans objects and calculate the same contrasts as previously
+```r
 > (pooled_ems <- pool_emmeans(my_emmeans_per_arm))
 
  Arm Visit emmean    SE   df lower.CL upper.CL
@@ -313,10 +329,13 @@ Conf-level adjustment: mvt method for 3 estimates
 P value adjustment: mvt method for 3 tests 
 ```
 
-The results perfectly agree with the previous approach.
-**Now, knowing that we can control things this way, let's finally request the bias-corrected estimtor of covariance!**
+Good!The results perfectly agree with the previous approach.
 
-```{r}
+### 7. Doing the same with the desired covariance estimator
+
+Now, knowing that we can control things this way, let's finally request the bias-corrected estimtor of covariance!
+
+```r
  my_emmeans_per_arm <- lapply(imp_list, 
                                function(dat) {
                                    m <- glmgee(PainScore ~ Visit * Arm, 
@@ -361,10 +380,173 @@ Confidence level used: 0.95
 Conf-level adjustment: mvt method for 3 estimates 
 P value adjustment: mvt method for 3 tests 
 ```
-
 **As we could see - the `vcov` parameter was handled properly.**
 
 Remember this trick with lapply + pool_emmeans(), because this way you will be able to do more than using defaults.
+
+--------
+## Example 2: GEE-fit longitudinal model for ordinal data
+
+Here we will try the `multgee::ordLORgee` for the GEE-fit ordinal logistic regresion, and `repolr::repolr` for the mixed ordinal logistic regression.
+
+/ In clinical trials **most likely** you will need the GEE for the marginal model, rather than GLMM for the conditional one. 
+But let me show both solutions with the same code. /
+
+### 1. The data
+I modified the previous data to better match the problem.
+
+```r
+d <- structure(list(ID = structure(c(1L, 1L, 1L, 2L, 2L, 2L, 3L, 3L, 
+                                     3L, 4L, 4L, 4L, 5L, 5L, 5L, 6L, 6L, 6L, 7L, 7L, 7L, 8L, 8L, 8L, 
+                                     9L, 9L, 9L, 10L, 10L, 10L, 11L, 11L, 11L, 12L, 12L, 12L, 13L, 
+                                     13L, 13L, 14L, 14L, 14L), 
+                                   levels = c("1", "2", "3", "4", "5",  "6", "7", "8", "9", "10", "11", "12", "13", "14"), class = "factor"), 
+                    
+                    Arm = structure(c(1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 
+                                      1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 2L, 2L, 2L, 
+                                      2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 
+                                      2L, 2L), 
+                                    levels = c("A", "B"), class = "factor"), 
+                    
+                    PainScore = structure(c(1L, 
+                                            2L, 4L, 1L, 6L, NA, 2L, 6L, 6L, 3L, 4L, 6L, 1L, NA, 5L, 3L, 
+                                            5L, 6L, 1L, 2L, 5L, 3L, NA, 4L, 5L, 5L, 2L, 5L, 2L, NA, 1L, 
+                                            4L, 3L, 4L, NA, 4L, 3L, 4L, NA, 2L, 5L, 6L), 
+                                          levels = c("1", "2", "3", "4", "5", "6"), class = c("ordered", "factor")),
+                    
+                    Visit = structure(c(1L, 
+                                        2L, 3L, 1L, 2L, 3L, 1L, 2L, 3L, 1L, 2L, 3L, 1L, 2L, 3L, 1L, 
+                                        2L, 3L, 1L, 2L, 3L, 1L, 2L, 3L, 1L, 2L, 3L, 1L, 2L, 3L, 1L, 
+                                        2L, 3L, 1L, 2L, 3L, 1L, 2L, 3L, 1L, 2L, 3L),
+                                      levels = c("V1", "V2", "V3"), class = "factor")), 
+               row.names = c(NA, -42L), class = "data.frame")
+
+```
+
+### 2. Data imputation
+```r
+set.seed(1000)
+library(mice)
+
+imp <- mice(d, m=5)
+imp$predictorMatrix[1:3, 1:4] <- 0
+imp$predictorMatrix[4, 1]     <- 0
+
+imp <- mice(d, m=5, predictorMatrix = imp$predictorMatrix, method = "pmm") # PMM will be OK for ordinal data in this simple scenarios
+imp_list <- complete(imp, "all")
+```
+
+### 3. Data analysis
+
+Remember!
+- `MASS::polr` uses logit[P(Y≤j)]=αj​−X⊤β --> Positive β = LOWER  probability of being in higher categories --> Moves toward lower  categories
+- `repolr` and `multgee` use  logit[P(Y>j)]=αj​+X⊤β --> Positive β = HIGHER probability of being in higher categories --> Moves toward higher categories
+
+Be mad at me, but I definitely prefer the non-traditional second approach...
+Just to show you what I mean above:
+```r
+dat <- imp_list[[1]]
+
+MASS_polr         <- MASS::polr(formula = PainScore~Visit * Arm, data = dat) # Doesn't account for repeated observations!
+repolr_repolr     <- repolr::repolr(formula  = PainScore ~ Visit * Arm, subjects = "ID", categories = 6, corr.mod = "independence", times = c(1,2,3), data=dat)
+multgee_ordLORgee <- ordLORgee(formula  = PainScore ~ Visit * Arm, id = ID, data = dat, repeated = Visit,  LORstr = "independence", link = "logit")
+
+cbind("MASS::polr"         = c(MASS_polr$zeta, coef(MASS_polr)), 
+      "repolr::repolr"     = coef(repolr_repolr),
+      "multgee::ordLORgee" = coef(multgee_ordLORgee)) 
+
+# Intercepts agree:
+              MASS::polr repolr::repolr multgee::ordLORgee
+1|2           0.05957117       0.059500         0.05956556
+2|3           1.81442670       1.814407         1.81442122
+3|4           2.48299189       2.483001         2.48298405
+4|5           3.43853515       3.438559         3.43852495
+5|6           5.12890589       5.128934         5.12889746
+
+# ...but look at the sings of the "betas" coefficients
+VisitV2       3.07369818      -3.073745        -3.07370905
+VisitV3       4.98200875      -4.982041        -4.98200012
+ArmB          2.35804086      -2.358001        -2.35805800
+VisitV2:ArmB -2.41665206       2.416608         2.41669626
+VisitV3:ArmB -4.54592781       4.545841         4.54594843
+```
+
+Whether you will leave the original coefficients or multiply "betas" *(-1) is up to you. I did.
+
+```r
+# --- GEE ordinal logistic regression
+emmeans_per_arm_gee1 <- lapply(imp_list, 
+                          function(dat) {
+
+                            m <- ordLORgee(formula  = PainScore ~ Visit * Arm,
+                                           id       = ID, 
+                                           data     = dat,
+                                           repeated = Visit, 
+                                           LORstr   = "uniform", # This must be set properly!
+                                           link     = "logit")
+                            
+                            num_of_levels     <- length(levels(dat$PainScore))
+                            num_of_intercepts <- num_of_levels-1
+                            num_of_betas      <- length(m$coefficients) - num_of_intercepts
+                            
+                            m_grid <- qdrg(formula = PainScore ~ Visit * Arm,
+                                       data    = dat,
+                                       coef    = m$coefficients * c(rep( 1, num_of_intercepts),
+                                                                    rep(-1, num_of_betas)), # sign reversed
+                                       vcov = m$robust.variance,
+                                       df = Inf,
+                                       ordinal = list(dim = num_of_levels, mode = "latent"))
+
+                            emmeans(m_grid, specs = ~Arm * Visit, adjust="none")
+                          })
+
+# --- Mixed ordinal logistic regression
+emmeans_per_arm_repolr <- lapply(imp_list, 
+                                 function(dat) {
+                                   num_of_levels     <- length(levels(dat$PainScore))
+
+                                   m <- repolr::repolr(formula  = PainScore ~ Visit * Arm,
+                                                       subjects = "ID",
+                                                       categories = num_of_levels,
+                                                       corr.mod = "independence",
+                                                       times    = c(1,2,3),
+                                                       data=dat)
+                                   
+                                   num_of_intercepts <- num_of_levels-1
+                                   num_of_betas      <- length(m$coefficients) - num_of_intercepts
+                                   
+                                   m_grid <- qdrg(formula = PainScore ~ Visit * Arm,
+                                                  data    = dat,
+                                                  coef    = m$coefficients * c(rep( 1, num_of_intercepts),
+                                                                               rep(-1, num_of_betas)), # sign reversed
+                                                  vcov = m$robust.var,
+                                                  df = Inf,
+                                                  ordinal = list(dim = num_of_levels, mode = "latent"))
+                                   
+                                   emmeans(m_grid, specs = ~Arm * Visit, adjust="none")
+                                 })
+
+pooled_emmeans_per_arm_gee1   <- pool_emmeans(emmeans_per_arm_gee1)
+pooled_emmeans_per_arm_repolr <- pool_emmeans(emmeans_per_arm_repolr)
+
+update(contrast(pooled_emmeans_per_arm_gee1,
+                list(                        # V1    V2    V3
+                  "Visit1 : A vs. B" = c( 1,-1,  0, 0,  0, 0),
+                  "Visit2 : A vs. B" = c( 0 ,0,  1,-1,  0, 0),
+                  "Visit3 : A vs. B" = c( 0, 0,  0, 0,  1,-1)
+                )),
+       adjust="mvt", level = 0.95, infer = c(TRUE, TRUE))
+
+update(contrast(pooled_emmeans_per_arm_repolr,
+                list(                        # V1    V2    V3
+                  "Visit1 : A vs. B" = c( 1,-1,  0, 0,  0, 0),
+                  "Visit2 : A vs. B" = c( 0 ,0,  1,-1,  0, 0),
+                  "Visit3 : A vs. B" = c( 0, 0,  0, 0,  1,-1)
+                )),
+       adjust="mvt", level = 0.95, infer = c(TRUE, TRUE))
+```
+
+OK, we did it!
 
 --------
 
