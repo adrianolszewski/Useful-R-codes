@@ -1,5 +1,5 @@
 # Experiment 1: 2-sample Raincloud plot with QQ plot.
-
+## Version A) Jittered raw data. Suitable for continuous variables.
 ```r
 library(ggpp)
 library(gghalves)
@@ -77,7 +77,42 @@ wrap_plots(list(p_raincloud, p_qq), nrow = 1, widths = c(1, 0.5))
 <img width="1309" height="707" alt="obraz" src="https://github.com/user-attachments/assets/3a303fc3-1bdd-4ef1-adf4-44131211a576" />
 
 ---
+## Version B) Dot-plot. Especially suitable for discrete data, like drug doses (5, 10, 20mg), scores (from questionnaires), stages, counts, any integers
+Here let me just reuse the current data.
 
+Replace 
+```r
+  geom_jitter(alpha = 0.25, size = 1.1, color = "grey30",
+              position = position_jitternudge(width = 0.05, height = 0, x = -0.25, nudge.from = "jittered", seed = 1000)) +
+```
+with
+```r
+  geom_dotplot(binaxis = "y", stackdir = "down",
+               method = "dotdensity", stackratio = .7,
+               position = position_nudge(x = -0.3),
+               dotsize = .2, fill="grey60", col="grey60") +
+```
+Remember to adjust the parameter to fit your data best. There are NO universally good settings, forget it.
+
+<img width="1309" height="707" alt="obraz" src="https://github.com/user-attachments/assets/f5f066ca-f765-460f-b798-bc4b837292cf" />
+---
+## Version C) Hexagonal binning
+
+Replace 
+```r
+  geom_jitter(alpha = 0.25, size = 1.1, color = "grey30",
+              position = position_jitternudge(width = 0.05, height = 0, x = -0.25, nudge.from = "jittered", seed = 1000)) +
+```
+with
+```r
+  geom_hex(bins=30, position = position_jitternudge(width = 0.05, height = 0, x = -0.25, nudge.from = "jittered", seed = 1000)) +
+  scale_fill_gradient2(low = "grey80",mid = "orange", high = "darkblue", midpoint = 10) +
+```
+As before, adjust the parameters, colours to your liking.
+
+<img width="1309" height="707" alt="obraz" src="https://github.com/user-attachments/assets/e3145987-3aa7-4d3a-8d7d-63fd285f8dbb" />
+
+---
 Data for reproduction:
 ```r
 d <- structure(list(MyColumn = c(NA, 133.248414966671, 65.6263807967717, 
