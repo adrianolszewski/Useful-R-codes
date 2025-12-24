@@ -76,10 +76,11 @@ wrap_plots(list(p_raincloud, p_qq), nrow = 1, widths = c(1, 0.5))
 ```
 <img width="1309" height="707" alt="obraz" src="https://github.com/user-attachments/assets/3a303fc3-1bdd-4ef1-adf4-44131211a576" />
 
+---
+
 Data for reproduction:
 ```r
-> dput(d)
-structure(list(MyColumn = c(NA, 133.248414966671, 65.6263807967717, 
+d <- structure(list(MyColumn = c(NA, 133.248414966671, 65.6263807967717, 
 68.5547320287609, 149.46477879798, 60.9254681269893, 29.4397483174843, 
 84.2142679051708, 82.9325876522646, 291.606392707816, 110.723844495154, 
 85.8759995002801, NA, NA, 118.859908763686, NA, 31.4959169118109, 
