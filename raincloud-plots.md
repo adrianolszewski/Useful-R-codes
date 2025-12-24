@@ -1,3 +1,8 @@
+These are the plots I use daily at work to investgate my data.
+
+_I'm not happy to add the Shapiro-Wilk test added (I could the remaining 90+ and watch them contradicting each other), having the awesome Aldor-Noiman QQ bands, but -well- in my field statistical reviewers are not always familiar with the modern tools or don't accept QQ plots, and blindly stick to pointless normality tests at N > 1000...
+I can do nothing with that, so I add the non-normality p-value and pretend I don't see it ;]_
+
 # Experiment 1: 2-sample Raincloud plot with QQ plot.
 ## Version A) Jittered raw data. Suitable for continuous variables.
 ```r
