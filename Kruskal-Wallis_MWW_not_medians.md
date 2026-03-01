@@ -21,6 +21,21 @@ dat <-data.frame(response = c(x111, x222, x333),
                  group=rep(LETTERS[1:3], each = 2*N+1))
 ```
 
+```r
+dat %>% 
+    mutate(median = median(response), .by="group") %>% 
+    ggplot(aes(x=response)) + 
+    geom_histogram(aes(x=response), bins=nclass.Sturges) + 
+    facet_wrap(~group) +
+    theme_bw() + 
+    geom_vline(aes(xintercept=median), col="red") +
+    geom_rug(sides = "b", col="grey40") +
+    geom_boxplot(aes(y=-5), width=3, show.legend = F) +
+    ylab("count")
+```
+<img width="886" height="507" alt="obraz" src="https://github.com/user-attachments/assets/9059a259-24b9-423c-8a84-6c90fe05e039" />
+
+
 Are all medians equal?
 ```r
 > unique(tapply(dat$response, dat$group, median))  # should see A: 5
