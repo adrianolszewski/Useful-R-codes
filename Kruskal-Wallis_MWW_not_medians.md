@@ -84,3 +84,6 @@ https://cran.r-project.org/web/packages/brunnermunzel/
       A-B       A-C       B-C 
 0.3022743 0.3756985 0.6314577 
 ```
+
+Explanation, books, papers, examples:
+https://www.researchgate.net/post/Mann-Whitney_Wilcoxon_rank_test_the_null_hypothesis_not_about_medians-in_case_you_needed_the_references
