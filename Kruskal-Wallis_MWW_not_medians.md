@@ -37,6 +37,7 @@ dat %>%
 
 
 Are all medians equal?
+_Note: not just "approximate". `Equal` means `equal`_
 ```r
 > unique(tapply(dat$response, dat$group, median))  # should see A: 5
 
