@@ -250,8 +250,11 @@ http://dx.doi.org/10.1017/CBO9780511802843</li>
 ------------
 
 TODO:
-and packages for wild bootstrap with 1-liner examples:
+1. add packages for wild bootstrap with 1-liner examples:
 modernBoot
 lmboot
 permuco
 maars
+
+2. add numerators to equations with \hspace{2cm} (xx)
+
