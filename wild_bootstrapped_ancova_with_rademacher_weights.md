@@ -30,8 +30,12 @@ You may do the sensitivity analysis with other methods as well. **Anyway - it's 
 In R you can do it with the [permuco](https://cran.r-project.org/web/packages/permuco/index.html) package (functions: `aovperm()`, `lmperm()`)</li>
 
 <li>Post-randomization imbalance can also be reflected by different variances across groups (= heterogeneity of variances across groups = heteroscedasticity of residuals).
-To account for this, **Wild Bootstrap with Rademacher or Mammen weights applied to ANCOVA** can reduce Type-1 error.</li>
-, 
+To account for this, **Wild Bootstrap with Rademacher or Mammen weights applied to ANCOVA** can reduce Type-1 error.
+
+Wild bootstrap resamples the residuals using random weights (here Rademacher) to preserve heteroskedasticity, instead of resampling whole observations.
+Rademacher weights (±1 with equal probability) are often used because they are simple and preserve the sign structure of the residuals.
+</li>
+
 <li> Last, but not least, high-leverage observations (related to point 2) can occur as well, so heteroscedasticity-consistent standard errors (HC),
 preferably HC2 or – more conservatively – HC3, can be very helpful in the bootstrap covariance analysis.</li>
 </ol>
