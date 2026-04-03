@@ -258,3 +258,18 @@ maars
 
 2. add numerators to equations with \hspace{2cm} (xx)
 
+3. add some discussion about the sample size limitations of resampling methods in two contexts:
+a) purely technical: to enable a necessary precision of estimation,
+Consider a 2-sample case with n1=2, n2=3, so there are (5; 2) = 10 combinations. So the resolution of p-value is 0.1 (0.1, 0.8, ...). If alpha is 0.05, you literally cannot reject H0 as the smallest possible p-value (1/10=0.1) is already > a.
+For Freedman-Lehman ANCOVA it's about permutations, so 5!=120, which is still not much (1/120~0.0083).
+For bootstrapped tests it's sampling with replacement, so 5^5, but this makes a problem with many samples containing almost all same observations. Wild bootstrap makes 2^N = 32, so 1/32~0.03, allowing theoretically for rejecting at 0.05.
+For N<20 the estimates may be unstable depending on seed, as even if you run 1M of permutations over N=10, you aren't gaining new information, just getting a high-precision measurement of a "shaky" foundation... So I'd say N>20, but even then min. p is 0.004...
+
+b) reasonability: even if N=10 would suffice, does it say something truly USEFUL and is this REPRESENTATIVE?
+How much can we trust an outcome based on 10 observations? Well, it depends whether it's an "isolated" artifact,
+or truly reflects the investigated population.
+
+
+
+
+
