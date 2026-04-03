@@ -1,4 +1,4 @@
-# Simple analysis of covariance (ANCOVA) with nonnormal residuals and heteroscedasticity using the wild-type bootstrap method with Rademacher (or Mammen) weights and the robust HC3 variance estimator.
+# Simple analysis of covariance (ANCOVA) with nonnormal residuals and heteroscedasticity using the wild-type bootstrap method with Rademacher (or Mammen) weights and the robust HC3-adjusted residuals.
 
 ## Description of an exemplary case
 We will consider a simple, two-arm, randomized, controlled clinical trial (RCT) with a (anticipated!) Gaussian response.
@@ -6,9 +6,7 @@ We will consider a simple, two-arm, randomized, controlled clinical trial (RCT) 
 The key analysis in such studies is the comparison between arms of the mean response after drug administration, adjusted for the baseline response.
 
 OK, but why is this adjustment to the baseline even necessary in an RCT?
-Well, this is a purely technical matter.
-You see, randomization does not guarantee balance of covariates between arms in a given case.
-A fairly large, statistically significant imbalance is not surprising.
+ANCOVA baseline adjustment increases efficiency and statistical power in RCTs when baseline correlates with outcome. Also, randomization does not guarantee balance of covariates between arms in a given case. A fairly large, statistically significant imbalance can occur by chance.
 
 Although such a difference at baseline is purely a sampling artifact, not accounting for it may noticeably reduce power.
 To address this, you may consider the _constrained longitudinal data analysis (cLDA)_ or _analysis of covariance (ANCOVA)*_.
@@ -19,7 +17,7 @@ However, the situation can get worse for three reasons:
 
 <ol>
 <li>Although the population distribution of the analyzed response may be assumed by you (domain knowledge, experts opinion, educated guess)
-to be well-approximated by a Gaussian distribution, the sample does not necessarily have t reflect this.
+to be well-approximated by a Gaussian distribution, the sample does not necessarily reflect this.
 This means that the residuals from the covariance model (ANCOVA) do not have to be "nicely" normal. Even close to that.
 
 <sub>/ Now, whether you should care about this is NOT the issue of this document. You may use QQ plots or (90+) formal tests for non-normality to diagnose this, and when it shows a noticeable problem, you may want to address it,
@@ -29,15 +27,13 @@ You may do the sensitivity analysis with other methods as well. **Anyway - it's 
 **IF** you decide to address these non-Gaussian residuals, the **Freedman-Lane Permutation Covariance Analysis** is at your disposal.
 In R you can do it with the [permuco](https://cran.r-project.org/web/packages/permuco/index.html) package (functions: `aovperm()`, `lmperm()`)</li>
 
-<li>Post-randomization imbalance can also be reflected by different variances across groups (= heterogeneity of variances across groups = heteroscedasticity of residuals).
-To account for this, **Wild Bootstrap with Rademacher or Mammen weights applied to ANCOVA** can reduce Type-1 error.
+<li>Post-randomization imbalance can also be reflected by different variances across groups (= heterogeneity of variances across groups = heteroscedasticity of residuals). To account for this, **Wild Bootstrap with Rademacher or Mammen weights applied to ANCOVA** can improve Type-1 error control under heteroscedasticity.
 
 Wild bootstrap resamples the residuals using random weights (here Rademacher) to preserve heteroskedasticity, instead of resampling whole observations.
 Rademacher weights (±1 with equal probability) are often used because they are simple and preserve the sign structure of the residuals.
 </li>
 
-<li> Last, but not least, high-leverage observations (related to point 2) can occur as well, so heteroscedasticity-consistent standard errors (HC),
-preferably HC2 or – more conservatively – HC3, can be very helpful in the bootstrap covariance analysis.</li>
+<li> Last, but not least, high-leverage observations can occur as well and distort standard error estimates in linear models. This motivates the use of leverage-adjusted heteroscedasticity-consistent estimators such as HC3 (or HC2).</li>
 </ol>
 
 **In this paper, I will implement this kind of analysis from scratch in R.**
@@ -47,7 +43,7 @@ preferably HC2 or – more conservatively – HC3, can be very helpful in the bo
 1. to obtain a confidence interval for the between-arm difference, we need the inference over the **full model**. Full = with both the treatment effect and the baseline covariate.
 (under the standard treatment coding the treatment effect is just the value of $\beta$ coefficient for the treatment arm).
 
-2. to obtain the p-value for the between-arm differene, we need the inferene over the **restricted model**. Restricted = without the treatment effect (just the baseline and intercept).
+2. to obtain the p-value for the between-arm difference, we need the inference over the **restricted model**. Restricted = without the treatment effect (just the baseline and intercept).
 
 -----
 
@@ -69,7 +65,7 @@ The **Ordinary Least Squares (OLS)** estimator is: $$\hat{\beta} = (X^T X)^{-1} 
 PS: Yes, I know that naive calculations using the textbok formulas are inferior to QR factorization.
 But still, compared to a loop-based bootstrap, even this naive appraoch will save a LOT of your time, so don't nag...
 
-## 2. Residual Transformation with HC3 (robust) estimator
+## 2. HC3-transforming residuals
 To account for heteroscedasticity and leverage, we will transform the raw OLS residuals $e_i = y_i - \hat{y}_i$.
 
 The **HC3-adjusted and centered** residuals used in the bootstrap are defined as:
@@ -81,7 +77,7 @@ The **HC3-adjusted and centered** residuals used in the bootstrap are defined as
 ```
 Where $h_i$ are the diagonal elements of the hat matrix $H = X(X^TX)^{-1}X^T$, representing the leverage of each observation.
 
-And after that, we will center these residuals. YOu may ask why since for the RAW residuals E[ε]=0.
+And after that, we will center these residuals. You may ask why since for the RAW residuals E[ε]=0.
 OK, but here we divide by ($1−h_i$​) which "de-centers" ("un-centers?") them, and according to [Long & Ervin 2000] we should "recenter" them to restore E[ε]=0.
 
 ## 3. Wild bootstrap in action
@@ -192,7 +188,7 @@ fit_null <- lm(response ~ baseline, data = df)
 beta_hat <- coef(fit_full)["armGroup B"]
 ```
 
-## Confidence interval
+## p-value
 ```r
 R <- 10000
 set.seed(12345)
@@ -216,7 +212,7 @@ beta_boot_null <- (XtX_inv %*% Xt %*% Y_star_null)[arm_idx, ]
 p_value     <- (sum(abs(beta_boot_null) >= abs(beta_hat)) + 1) / (R + 1)
 ```
 
-## p-value
+## confidence interval
 ```r
 h_full         <- hatvalues(fit_full)
 res_full       <- residuals(fit_full) / (1 - h_full)
@@ -238,3 +234,24 @@ data.frame( estimate   = beta_hat,
 armGroup B 1.750053 -0.08306756 3.578945 0.0659934
 ```
 
+
+# Literature
+<ol>
+  <li>Wu, C.F.J. (1986). "Jackknife, Bootstrap, and Other Resampling Methods in Regression Analysis." Annals of Statistics. Vol. 14, No. 4, pp.1261 - 1295 | PDF: https://www.bauer.uh.edu/rsusmel/phd/wu1986.pdf</li>
+  <li>Davidson, R., & Flachaire, E. (2008). The wild bootstrap, tamed at last. Journal of Econometrics, 146(1), 162–169. https://doi.org/10.1016/j.jeconom.2008.08.003 | PDF: https://hal.science/hal-00649250/file/The_Wild_Bootstrap%252C_Tamed_at_Last.pdf</li>
+  <li>Zimmermann, G., Pauly, M., & Bathke, A. C. (2019). Small-sample performance and underlying assumptions of a bootstrap-based inference method for a general analysis of covariance model with possibly heteroskedastic and nonnormal errors. Statistical Methods in Medical Research, 28(12), 3808–3821. https://doi.org/10.1177/0962280218817796 | PDF: https://arxiv.org/abs/1709.08031 | Note: it's only a preprint, the paper has been cited in subsequent work but does not appear to have a formal journal publication as of now...</li>
+  <li>James G. MacKinnon, 2012. "Thirty Years Of Heteroskedasticity-robust Inference," Working Paper 1268, Economics Department, Queen's University. | PDF: http://qed.econ.queensu.ca/working_papers/papers/qed_wp_1268.pdf</li>
+  <li>Davison, A.C. and Hinkley, D.V. (1997) Bootstrap Methods and their Application. Cambridge University Press, New York.
+http://dx.doi.org/10.1017/CBO9780511802843</li>
+  <li>Pötscher, Benedikt M. and Preinerstorfer, David, (2021), How Reliable are Bootstrap-based Heteroskedasticity Robust Tests?, Papers, arXiv.org, https://EconPapers.repec.org/RePEc:arx:papers:2005.04089 | PDF: https://arxiv.org/pdf/2005.04089</li>
+  <li> Regina Y. Liu. "Bootstrap Procedures under some Non-I.I.D. Models." Ann. Statist. 16 (4) 1696 - 1708, December, 1988. https://doi.org/10.1214/aos/1176351062 | PDF: https://projecteuclid.org/journalArticle/Download?urlid=10.1214%2Faos%2F1176351062</li>
+</ol>
+
+------------
+
+TODO:
+and packages for wild bootstrap with 1-liner examples:
+modernBoot
+lmboot
+permuco
+maars
