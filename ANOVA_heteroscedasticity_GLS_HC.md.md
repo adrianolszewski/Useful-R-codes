@@ -5,6 +5,7 @@ library(purrr)
 library(ggplot2)
 library(nlme)
 library(emmeans)
+library(sandwich)
 ```
 
 # Data preparation
@@ -36,11 +37,22 @@ car::leveneTest(value ~ group, data=d) # by default uses medians as the centers 
 ```
 
 # The GLS approach
-## Fitting a linear model using GLS estimation
+## Fitting a linear model using GLS estimation and setting up the EM-means (for Satterthwaite DF)
 ``` r
 m_gls <- gls(value ~ group, 
              weights = varIdent(form = ~ 1 | group), 
              data = d)
+
+(em_gls <- emmeans(m_gls, specs = ~group, mode = "satterthwaite"))
+```
+```
+ ## group emmean    SE   df lower.CL upper.CL
+ ## 1      0.841 0.132 48.9    0.577     1.11
+ ## 2      3.834 1.500 49.0    0.829     6.84
+ ## 3      5.343 0.643 49.0    4.050     6.64
+
+Degrees-of-freedom method: satterthwaite 
+Confidence level used: 0.95 
 ```
 
 ## Pairwise comparisons
@@ -48,14 +60,9 @@ No adjustments for multiple comparsons - we want to see the raw numbers to see w
 We also use the Satterthwaite degrees of freedom, just like the Welch t test does.
 
 ``` r
-emm_result <- update(pairs(
-  emmeans(m_gls, specs = ~group, mode = "satterthwaite"), adjust="none"), 
-  infer = c(TRUE, TRUE)) %>% 
-  data.frame()
+emm_result_gls <- update(pairs(em_gls, adjust="none", infer = c(TRUE, TRUE))) %>% data.frame()
 
-emm_result %>% 
-mutate(across(where(is.numeric), ~sprintf("%.3f", .))) %>% 
-    select(-SE)
+emm_result_gls %>% mutate(across(where(is.numeric), ~sprintf("%.3f", .))) %>% select(-SE)
 ```
 ```
 ##          contrast estimate     df lower.CL upper.CL t.ratio p.value
@@ -63,22 +70,6 @@ mutate(across(where(is.numeric), ~sprintf("%.3f", .))) %>%
 ## 2 group1 - group3   -4.501 53.101   -5.818   -3.185  -6.857   0.000
 ## 3 group2 - group3   -1.509 66.534   -4.758    1.740  -0.927   0.357
 ```
-``` r
-emm_result %>% 
- ggplot(aes(x = estimate, y = contrast)) +
-    geom_vline(xintercept = 0, linetype = "dashed", color = "red", alpha = 0.5) +
-    geom_pointrange(aes(xmin = lower.CL, xmax = upper.CL), color = "#2c3e50", size = 0.8) +
-    labs(title = "Pairwise Group Comparisons (GLS)",
-subtitle = "95% Confidence Intervals (Unadjusted)",
-x = "Estimated Difference in Means, y = "Contrast) +
-    theme_minimal(base_size = 13) +
-    theme(
-        panel.grid.minor = element_blank(),
-        axis.title.y = element_text(margin = margin(r = 10)),
-        axis.title.x = element_text(margin = margin(t = 10)),
-        plot.title = element_text(face = "bold"))
-```
-<img width="692" height="662" alt="obraz" src="https://github.com/user-attachments/assets/b3f1fa28-8687-4c14-9eb9-5f3d3d5afba4" />
 
 ## Comparing against classic Welch (-Satterthwaite) version of the t test
 ``` r
@@ -174,6 +165,59 @@ rbind(data.frame(Residuals = "OLS applied naively: response residuals", res = re
     labs(caption = "Aldor-Noiman et al. tail-sensitive simultaneous confidence bands")
 ```
 <img width="1185" height="707" alt="obraz" src="https://github.com/user-attachments/assets/6091a838-38a6-4494-bf74-bb3215b00432" />
+
+---
+
+# The OLS + HC approach
+## Fitting a linear model using OLS estimation and setting up the EM-means (for convenience) along with HC3 sandwich
+``` r
+m_ols <- lm(value ~ group, data = d)
+
+(em_robust <- emmeans(m_ols, specs = ~ group, vcov. = vcovHC(m_ols, type = "HC3")))
+```
+```
+ group emmean    SE  df lower.CL upper.CL
+ 1      0.841 0.133 147    0.578     1.10
+ 2      3.834 1.510 147    0.849     6.82
+ 3      5.343 0.650 147    4.059     6.63
+
+Confidence level used: 0.95 
+```
+## Pairwise comparisons
+No adjustments for multiple comparsons - we want to see the raw numbers to see what's going on
+``` r
+emm_result_ols <- update(pairs(em_robust, adjust="none", infer = c(TRUE, TRUE))) %>% data.frame()
+
+emm_result_ols %>% mutate(across(where(is.numeric), ~sprintf("%.3f", .))) %>% select(-SE)
+```
+```
+##         contrast estimate      df lower.CL upper.CL t.ratio p.value
+## 1 group1 - group2   -2.993 147.000   -5.989    0.004  -1.974   0.050
+## 2 group1 - group3   -4.501 147.000   -5.812   -3.191  -6.788   0.000
+## 3 group2 - group3   -1.509 147.000   -4.758    1.740  -0.918   0.360
+```
+
+## Visual comparison of GLS vs OLS + HC3
+``` r
+rbind(cbind("Method" = "GLS", emm_result_gls),
+      cbind("Method" = "OLS + HC3", emm_result_ols)) %>% 
+    ggplot(aes(x = estimate, y = contrast, col = Method)) +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "red", alpha = 0.5) +
+    geom_pointrange(aes(xmin = lower.CL, xmax = upper.CL), size = 0.8, position = position_dodge(width = 0.5)) +
+    labs(title = "Pairwise Group Comparisons: GLS vs OLS",
+         subtitle = "95% Confidence Intervals (Unadjusted)",
+         x = "Estimated Difference in Means", y = "Contrast") +
+    theme_minimal(base_size = 13) +
+    theme(
+        panel.grid.minor = element_blank(),
+        axis.title.y = element_text(margin = margin(r = 10)),
+        axis.title.x = element_text(margin = margin(t = 10)),
+        plot.title = element_text(face = "bold"))
+```
+<img width="972" height="645" alt="obraz" src="https://github.com/user-attachments/assets/025c4d84-89de-4efe-a771-afb95ac3b3de" />
+
+
+
 
 
 
