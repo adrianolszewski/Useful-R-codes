@@ -176,19 +176,18 @@ m_ols <- lm(value ~ group, data = d)
 (em_robust <- emmeans(m_ols, specs = ~ group, vcov. = vcovHC(m_ols, type = "HC3")))
 ```
 ```
- group emmean    SE  df lower.CL upper.CL
- 1      0.841 0.133 147    0.578     1.10
- 2      3.834 1.510 147    0.849     6.82
- 3      5.343 0.650 147    4.059     6.63
+ ## group emmean    SE  df lower.CL upper.CL
+ ## 1      0.841 0.133 147    0.578     1.10
+ ## 2      3.834 1.510 147    0.849     6.82
+ ## 3      5.343 0.650 147    4.059     6.63
 
 Confidence level used: 0.95 
 ```
 ## Pairwise comparisons
-No adjustments for multiple comparsons - we want to see the raw numbers to see what's going on
 ``` r
-emm_result_ols <- update(pairs(em_robust, adjust="none", infer = c(TRUE, TRUE))) %>% data.frame()
+emm_result_robust <- update(pairs(em_robust, adjust="none", infer = c(TRUE, TRUE))) %>% data.frame()
 
-emm_result_ols %>% mutate(across(where(is.numeric), ~sprintf("%.3f", .))) %>% select(-SE)
+emm_result_robust %>% mutate(across(where(is.numeric), ~sprintf("%.3f", .))) %>% select(-SE)
 ```
 ```
 ##         contrast estimate      df lower.CL upper.CL t.ratio p.value
@@ -197,14 +196,41 @@ emm_result_ols %>% mutate(across(where(is.numeric), ~sprintf("%.3f", .))) %>% se
 ## 3 group2 - group3   -1.509 147.000   -4.758    1.740  -0.918   0.360
 ```
 
-## Visual comparison of GLS vs OLS + HC3
+---
+# The naive OLS approach
+``` r
+(em_ols <- emmeans(m_ols, specs = ~ group))
+```
+```
+ ## group emmean    SE  df lower.CL upper.CL
+ ## 1      0.841 0.133 147    0.578     1.10
+ ## 2      3.834 1.510 147    0.849     6.82
+ ## 3      5.343 0.650 147    4.059     6.63
+
+Confidence level used: 0.95 
+```
+## Pairwise comparisons
+``` r
+emm_result_ols <- update(pairs(em_ols, adjust="none", infer = c(TRUE, TRUE))) %>% data.frame()
+
+emm_result_ols %>% mutate(across(where(is.numeric), ~sprintf("%.3f", .))) %>% select(-SE)
+```
+```
+##          contrast estimate      df lower.CL upper.CL t.ratio p.value
+## 1 group1 - group2   -2.993 147.000   -5.627   -0.358  -2.245   0.026
+## 2 group1 - group3   -4.501 147.000   -7.136   -1.867  -3.376   0.001
+## 3 group2 - group3   -1.509 147.000   -4.143    1.126  -1.132   0.260
+```
+
+## Visual comparison of GLS vs OLS + HC3 vs OLS
 ``` r
 rbind(cbind("Method" = "GLS", emm_result_gls),
-      cbind("Method" = "OLS + HC3", emm_result_ols)) %>% 
+      cbind("Method" = "OLS + HC3", emm_result_robust),
+      cbind("Method" = "OLS", emm_result_ols)) %>% 
     ggplot(aes(x = estimate, y = contrast, col = Method)) +
     geom_vline(xintercept = 0, linetype = "dashed", color = "red", alpha = 0.5) +
     geom_pointrange(aes(xmin = lower.CL, xmax = upper.CL), size = 0.8, position = position_dodge(width = 0.5)) +
-    labs(title = "Pairwise Group Comparisons: GLS vs OLS",
+    labs(title = "Pairwise Group Comparisons: GLS vs OLS + HC3 vs OLS",
          subtitle = "95% Confidence Intervals (Unadjusted)",
          x = "Estimated Difference in Means", y = "Contrast") +
     theme_minimal(base_size = 13) +
@@ -214,7 +240,7 @@ rbind(cbind("Method" = "GLS", emm_result_gls),
         axis.title.x = element_text(margin = margin(t = 10)),
         plot.title = element_text(face = "bold"))
 ```
-<img width="972" height="645" alt="obraz" src="https://github.com/user-attachments/assets/025c4d84-89de-4efe-a771-afb95ac3b3de" />
+<img width="972" height="645" alt="obraz" src="https://github.com/user-attachments/assets/ce1f2fa5-a614-4a79-8d9b-200910a56da0" />
 
 
 ---
