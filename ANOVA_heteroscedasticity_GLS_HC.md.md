@@ -1,6 +1,3 @@
-**GLS-fit general linear model handles unequal variances.**
-No need to switch to non-parametric methods, like Kruskal-Wallis (suffering from unequal variances even more - look at the botom!)
-
 ``` r
 library(dplyr)
 library(tidyr)
@@ -10,7 +7,7 @@ library(nlme)
 library(emmeans)
 ```
 
-# Generate data
+# Data preparation
 ``` r
 set.seed(1000)
 
@@ -25,7 +22,7 @@ ggplot(d, aes(y=value, x=group)) +
 ```
 <img width="1185" height="707" alt="obraz" src="https://github.com/user-attachments/assets/ebdbe8c7-6775-47a0-b868-614ab8b9071d" />
 
-# Check variances (Brown-Forsythe)
+## Checking variances (Brown-Forsythe)
 ``` r
 car::leveneTest(value ~ group, data=d) # by default uses medians as the centers -> Brown-Forsythe
 ```
@@ -37,14 +34,16 @@ car::leveneTest(value ~ group, data=d) # by default uses medians as the centers 
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
-# Fit a linear model using GLS estimation
+
+# The GLS approach
+## Fitting a linear model using GLS estimation
 ``` r
 m_gls <- gls(value ~ group, 
              weights = varIdent(form = ~ 1 | group), 
              data = d)
 ```
 
-# Do a pairwise comparison
+## Pairwise comparisons
 No adjustments for multiple comparsons - we want to see the raw numbers to see what's going on
 We also use the Satterthwaite degrees of freedom, just like the Welch t test does.
 
@@ -81,7 +80,7 @@ x = "Estimated Difference in Means, y = "Contrast) +
 ```
 <img width="692" height="662" alt="obraz" src="https://github.com/user-attachments/assets/b3f1fa28-8687-4c14-9eb9-5f3d3d5afba4" />
 
-# Compare with classic Welch (-Satterthwaite) version of the t test
+## Comparing against classic Welch (-Satterthwaite) version of the t test
 ``` r
 combn(levels(d$group), 2, simplify = FALSE) %>% 
   map_dfr(~ {
@@ -97,7 +96,6 @@ combn(levels(d$group), 2, simplify = FALSE) %>%
   select(contrast, estimate, df = parameter, lower.CL = conf.low, upper.CL = conf.high, t.ratio = statistic, p.value) %>% 
   mutate(across(where(is.numeric), ~sprintf("%.3f", .)))
 ```
-
 ```
 ## # A tibble: 3 × 7
 ##   contrast        estimate df     lower.CL upper.CL t.ratio p.value
@@ -107,7 +105,8 @@ combn(levels(d$group), 2, simplify = FALSE) %>%
 ## 3 group2 - group3 -1.509   66.534 -4.758   1.740    -0.927  0.357
 ```
 
-# ANOVA using the GLS-fit model and Satterthwaite DF
+## ANOVA
+### Using the GLS-fit model and Satterthwaite DF
 ``` r
 # ANOVA
 joint_tests(m_gls)
@@ -117,9 +116,8 @@ joint_tests(m_gls)
 ##  group        2 49.76  25.263 <0.0001
 ```
 
-# Can also use the naive approach from car::Anova() using either infinite (asymptotic) DF or residual DF
-
-## Residual DF
+### Using the naive approach from car::Anova() using either infinite (asymptotic) DF or residual DF
+#### Residual DF
 ``` r
 joint_tests(m_gls, mode="df.error")
 ```
@@ -140,7 +138,7 @@ car::Anova(m_gls, test.statistic = "F", error.df = 145)
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
-## Asymptotic DF
+#### Asymptotic DF
 ``` r
 joint_tests(m_gls, mode="asymptotic")
 ```
@@ -161,7 +159,8 @@ car::Anova(m_gls)
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
-# Check the residuals. Look what might happen when you used the OLS naively
+## Checking the residuals
+Look what might happen when you used the OLS naively
 ``` r
 rbind(data.frame(Residuals = "OLS applied naively: response residuals", res = residuals(m_gls, type="response")),
       data.frame(Residuals = "GLS in action: normalized residuals", res= residuals(m_gls, type="normalized"))) %>% 
