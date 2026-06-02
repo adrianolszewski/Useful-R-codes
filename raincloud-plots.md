@@ -117,6 +117,31 @@ As before, adjust the parameters, colours to your liking.
 <img width="1309" height="707" alt="obraz" src="https://github.com/user-attachments/assets/e3145987-3aa7-4d3a-8d7d-63fd285f8dbb" />
 
 ---
+
+Since the gghalves packages has been removed from CRAN, I switch now to the [ggdist](https://github.com/mjskay/ggdist/).
+It turns out that rainclouds made with it can be flexibly adjusted and match the result made with gghalves.
+
+Example:
+``` r
+ggplot(iris, aes(x = Species, y = Sepal.Length)) +
+    geom_rain(rain.side = 'r',
+              point.args = list(col=NA, fill=NA), 
+              boxplot.args.pos = list(position=position_nudge(x = -0.1)),
+              boxplot.args = list(width=0.1, outlier.shape=NA),
+              violin.args = list(fill="grey60", alpha=0.3, col="grey80"),
+              violin.args.pos = list(position= position_nudge(x = 0))) +
+    theme_bw() +
+    geom_dotplot(binaxis = "y", stackdir = "down",
+                 method = "dotdensity", stackratio = .5,
+                 position = position_nudge(x = -.2),
+                 dotsize = .4, fill="grey60", col="grey60")+
+    geom_pointrange(data = stats,
+                    aes(y = Mean, ymin = Mean - SD, ymax = Mean + SD),
+                    size = .3, color = "blue") 
+```
+<img width="693" height="520" alt="obraz" src="https://github.com/user-attachments/assets/0ef8fac8-a9ba-477d-9bd5-00cb2098637b" />
+
+---
 Data for reproduction:
 ```r
 d <- structure(list(MyColumn = c(NA, 133.248414966671, 65.6263807967717, 
