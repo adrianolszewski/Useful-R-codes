@@ -1,8 +1,8 @@
 These are the plots I use daily at work to investgate my data.
 
-**EDIT**: Since the gghalves package has been removed from CRAN, I switch to the [ggdist](https://github.com/mjskay/ggdist/).
+**EDIT**: Since the gghalves package has been removed from CRAN, I switch to the [ggrain](https://github.com/njudd/ggrain).
 It turns out that rainclouds made with it can be flexibly adjusted and match the result made with gghalves.
-I'm gonna rewrite the gghalves code to ggdist, but by now let me only tell you this is perfectly doable (example - at the bottom of the page).
+I'm gonna rewrite the gghalves code to ggrain, but by now let me only tell you this is perfectly doable (example - at the bottom of the page).
 
 _I'm not happy to add the Shapiro-Wilk tests (I could add the remaining 90+ and watch them contradicting each other), having the awesome Aldor-Noiman bands on my QQ plots, but -well- in my field statistical reviewers are not always familiar with the modern tools or not rarely don't accept QQ plots, sticking to these pointless non-normality tests at N > 1000... I can do nothing with that, so I add the non-normality p-value and pretend I don't see it ;]_
 
@@ -122,7 +122,7 @@ As before, adjust the parameters, colours to your liking.
 
 ---
 
-Since the gghalves packages has been removed from CRAN, I switch now to the [ggdist](https://github.com/mjskay/ggdist/).
+Since the gghalves packages has been removed from CRAN, I switch now to the **[ggdist](https://github.com/mjskay/ggdist/)**.
 It turns out that rainclouds made with it can be flexibly adjusted and match the result made with gghalves.
 
 Example:
