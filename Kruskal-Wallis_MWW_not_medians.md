@@ -59,9 +59,77 @@ If you have `tidyplots` installed:
 https://tidyplots.org/
 
 ```r
+library(dplyr)
+library(emmeans)
+library(quantreg)
+library(patchwork)
 library(tidyplots)
 
-dat %>% 
+plot_superiority <- function(X, Y, name_X, name_Y) {
+  
+  expand_grid(X, Y) %>% 
+    mutate(status = case_when(Y > X ~ "superior",
+                              Y < X ~ "inferior",
+                              .default = "equal")) -> superior_status
+  
+  prob_index <- (sum(superior_status$status == "superior") + 0.5*sum(superior_status$status == "equal")) / nrow(superior_status)
+  
+  med_X <- median(X)
+  med_Y <- median(Y)
+  
+  rq_mod <- rq(response ~ group, data = dat, tau = 0.5)
+  rq_p <- emmeans(rq_mod, specs = ~group, se = "boot") %>%
+    pairs(reverse = TRUE) %>%
+    summary(infer = TRUE) %>%
+    pull(p.value) %>%
+    scales::pvalue(add_p = TRUE)
+  
+  mwu_p <- wilcox.test(X, Y)$p.value %>% scales::pvalue(add_p = TRUE)
+  
+  plot_title <- sprintf("Stochastic superiority: P(%s>%s)+0.5*P(%s=%s) = %.1f%%", name_Y, name_X, name_Y, name_X, 100 * prob_index)
+  plot_sub <- sprintf("quantile regression: %s | Mann-Whitney: %s", rq_p, mwu_p)
+  
+  ggplot(superior_status) +
+    geom_segment(aes(x = Y, xend = X, y = 1, yend = 0, color = status), linewidth = 0.5, alpha=0.1) +
+    geom_point(aes(x = X, y = 0), color = "black", size = 1) +
+    geom_point(aes(x = Y, y = 1), color = "black", size = 1) +
+    
+    annotate(geom = "point", x = med_X, y = 0, color = "red", size = 3) +
+    annotate(geom = "point", x = med_Y, y = 1, color = "red", size = 3) +
+    
+    annotate(geom = "segment",
+             x = med_X, xend = med_Y, y = 0, yend = 1,
+             color = "blue", linewidth = 1.5) +
+    
+    annotate(geom="text", 
+             x = med_X, y = -0.05,
+             label = sprintf("Median=%.1f", med_X),
+             color = "blue", size = 4) +
+    
+    annotate(geom="text", 
+             x = med_Y, y = 1.05,
+             label = sprintf("Median=%.1f", med_Y),
+             color = "blue", size = 4) +
+    
+    scale_color_manual(values = c("superior" = "#00BA38", "inferior" = "#F8766D", "equal" = "grey")) +
+    scale_x_continuous(name = name_X, sec.axis = dup_axis(name = name_Y)) +
+    labs(title = plot_title, subtitle = plot_sub) +
+    guides(color = guide_legend(override.aes = list(alpha = 1, linewidth = 1.5))) +
+    theme_bw() +
+    theme(plot.title = element_text(size = 16),
+          plot.subtitle = element_text(size = 13),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          axis.title.y = element_blank())
+}
+
+patchwork::wrap_plots(
+  plot_superiority(x111, x222, name_Y = "B", name_X = "A"), 
+  plot_superiority(x222, x333, name_Y = "C", name_X = "B"),
+  plot_superiority(x111, x333, name_Y = "C", name_X = "A"),
+
+  # boxplots
+  (dat %>% 
     mutate(median = median(response), .by="group") %>% 
     tidyplot(x = group, y = response) %>% 
     theme_tidyplot(fontsize = 11) %>% 
@@ -74,9 +142,12 @@ dat %>%
     add_test_pvalue(method = "wilcox_test", label="Mann-Whitney (Wilcoxon) p-value={p.format}", label.size = 4, hide_info = TRUE) %>% 
     adjust_size(width = NA, height = NA) +
     geom_text(aes(y=median, label=sprintf("Med=%.5f", median)), check_overlap = TRUE, col="red") +
-    scale_y_continuous(limits=c(0, 15))
+    scale_y_continuous(limits=c(0, 15))),
+
+  ncol = 2)
+
 ```
-<img width="742" height="737" alt="obraz" src="https://github.com/user-attachments/assets/e4b91439-ae0e-4348-97c2-9ef854b3eb2e" />
+<img width="1500" height="1028" alt="obraz" src="https://github.com/user-attachments/assets/9bdb7816-2fc3-41af-947c-10e5f2ba6805" />
 
 Stochastic superiority: explains it all...
 ```r
