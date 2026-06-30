@@ -169,8 +169,11 @@ https://cran.r-project.org/web/packages/brunnermunzel/
                  function(x) brunnermunzel::brunnermunzel.test(x[[2]], x[[1]])$estimate),
            nm = combn(c("A","B","C"), 2, paste, collapse=" vs. "))
 
-      A vs. B       A vs. C       B vs. C 
-0.3022743 0.3756985 0.6314577 
+  A vs. B   A vs. C   B vs. C 
+0.3022743 0.3756985 0.6314577
+
+# or, to match the plots descriptions:
+sprintf("%.1f%%", 100*(1-c(0.3022743, 0.3756985, 0.6314577)))
 ```
 
 Explanation, books, papers, examples:
