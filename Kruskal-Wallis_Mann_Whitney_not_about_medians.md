@@ -173,7 +173,8 @@ https://cran.r-project.org/web/packages/brunnermunzel/
 0.3022743 0.3756985 0.6314577
 
 # or, to match the plots descriptions:
-sprintf("%.1f%%", 100*(1-c(0.3022743, 0.3756985, 0.6314577)))
+> sprintf("%.1f%%", 100*(1-c(0.3022743, 0.3756985, 0.6314577)))
+[1] "69.8%" "62.4%" "36.9%"
 ```
 
 Explanation, books, papers, examples:
