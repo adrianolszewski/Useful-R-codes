@@ -1,3 +1,4 @@
+# Scenario 1: Equal medians, H0 rejected.
 ```r
 set.seed(1000)
 #N <- 10  # p-value: 0.03247
