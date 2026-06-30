@@ -1,4 +1,9 @@
-# Scenario 1: Equal medians, H0 rejected.
+The following scenarios may happen:
+
+1. Equal medians, H0 rejected (even with p<0.001 at small samples)
+2. Different medians, H0 not rejected (even with p>0.999 at large samples)
+
+# Scenario 1: Equal medians, H0 rejected
 ```r
 set.seed(1000)
 #N <- 10  # p-value: 0.03247
@@ -179,3 +184,11 @@ https://cran.r-project.org/web/packages/brunnermunzel/
 
 Explanation, books, papers, examples:
 https://www.researchgate.net/post/Mann-Whitney_Wilcoxon_rank_test_the_null_hypothesis_not_about_medians-in_case_you_needed_the_references
+
+---
+
+# Scenario 2: Different medians, H0 not rejected
+Under construction
+
+In the meantime, look at this pic:
+<img width="1349" height="867" alt="obraz" src="https://github.com/user-attachments/assets/4892128d-ff8a-41e9-99ff-57013a395922" />
