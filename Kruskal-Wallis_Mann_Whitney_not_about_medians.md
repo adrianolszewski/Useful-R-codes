@@ -3,6 +3,8 @@ The following scenarios may happen:
 1. Equal medians, H0 rejected (even with p<0.001 at small samples)
 2. Different medians, H0 not rejected (even with p>0.999 at large samples)
 
+Reasons, papers, books, discussion: https://www.researchgate.net/post/Mann-Whitney_Wilcoxon_rank_test_the_null_hypothesis_not_about_medians-in_case_you_needed_the_references?_init=1
+
 # Scenario 1: Equal medians, H0 rejected
 ```r
 set.seed(1000)
