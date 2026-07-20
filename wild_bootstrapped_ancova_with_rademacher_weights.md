@@ -236,9 +236,9 @@ armGroup B 1.750053 -0.08306756 3.578945 0.0659934
 
 ```r
 hist(beta_boot_full)
-abline(v = quantile(beta_boot_full, probs = c(0.025, 0.975)))
+abline(v = quantile(beta_boot_full, probs = c(0.025, 0.975)), col="red", lwd=2)
 ```
-<img width="681" height="520" alt="obraz" src="https://github.com/user-attachments/assets/30a804b2-4373-42ca-b92f-93c63bf07cf5" />
+<img width="681" height="520" alt="obraz" src="https://github.com/user-attachments/assets/e24cea71-1e32-4e14-bdfe-cee1bbf29bbf" />
 
 
 # Literature
