@@ -1,9 +1,54 @@
-The following scenarios may happen:
+Despite a common claim that Mann-Whitney (Wilcoxon), Kruskal-Wallis, Fligner-Poicello and other rank-based tests compare medians,
+**this is a widespread misconception when considered in general**, i.e. unless strong IID condition is met, resulting in the location-shift case, consistent with the proportional-odds model.
 
-1. Equal medians, H0 rejected (even with p<0.001 at small samples)
-2. Different medians, H0 not rejected (even with p>0.999 at large samples)
+This  misconception has been spread so widely, so many textbooks, free and paid courses, even academic lecturers repeat it.
 
-Reasons, papers, books, discussion: https://www.researchgate.net/post/Mann-Whitney_Wilcoxon_rank_test_the_null_hypothesis_not_about_medians-in_case_you_needed_the_references?_init=1
+This is by-definition (by construction) a test of stochastic equivalence vs superiority, i.e. whether P(B>A) + 0.5*P(B=A) = 0.5.
+Such superiority may occur for a difference in any properties of the compared samples: 
+- **locations** (means, medians, Hodges-Lehman 2-sample pseudo-median and other measures),
+- **dispersions** (variances, general scale parameter, range),
+- **shapes** (skewness, kurtosis)
+
+In other words, **when a difference is found with test between the compared samples, it cannot be simply attributed to either location, dispersion or shape, unless 2 of the 3 characteristics are comparable**. Otherwise each of them may "contribute" to stochastic superiority, confusing the analyst.
+
+And then analysts may be surprised how is that possible that for exactly equal means or medians the test returns p-value < 0.0...01 (for quite small samples) or for much different means or medians the p-value > 0.999, while methods like Brown-Mood or quantile regression (under a variety of methods for obtaining standard errors) differ greatly in their findings, not to mention that visual assessments (e.g. box-plots) also do not support respective claims.
+
+The following scenarios may easily happen:
+
+1. Equal medians or means, H0 rejected (even with p<0.0...01 at small samples)
+2. Different medians, H0 not rejected (even with p>0.999... at large samples)
+3. Different entire empirical distributions (eCDFs), H0 not rejected (in the figure below it's the middle case)
+<img width="823" height="360" alt="obraz" src="https://github.com/user-attachments/assets/107ceec2-d04a-4d08-b4bc-568b0836a5fa" />
+
+There are several articles confirming that these tests fail as tests of medians*, but only a few books explain it. So, in case you need need, let me cite a few, with the most important one opening the list:
+
+1.    Brunner, E., Bathke, A. C., & Konietschke, F. (2018). Rank and pseudo-rank procedures for independent observations in factorial designs: Using R and SAS. Springer.
+2.    Hettmansperger, T. P., & McKean, J. W. (2010). Robust nonparametric statistical methods (2nd ed.). CRC Press. (chapter 2.4: Inference based on the Mann-Whitney-Wilcoxon)
+3.    Thas, O. (2010). Comparing distributions. Springer. (chapter 9.3.3.1: Implied Null Hypothesis)
+4.    Wilcox, R. R. (2021). Introduction to robust estimation and hypothesis testing (5th ed.). Academic Press. (chapter 5.7 Methods Based on Ranks and the Typical Difference)
+5.    Fagerland MW, Sandvik L. The Wilcoxon-Mann-Whitney test under scrutiny. Stat Med. 2009 May 1;28(10):1487-97. doi: 10.1002/sim.3561. PMID: 19247980. [ https://imaging.mrc-cbu.cam.ac.uk/statswiki/FAQ/paranp?action=AttachFile&do=get&target=MannW.pdf ]
+
+Plus the original paper of Mann and Whitney:
+
+6.    Mann, H. B., & Whitney, D. R. (1947). On a test of whether one of two random variables is stochastically larger than the other. The Annals of Mathematical Statistics, 18(1), 50–60. https://doi.org/10.1214/aoms/1177730491
+
+Plus some papers and discussions:
+- Divine, G. W., Norton, H. J., Barón, A. E., & Juarez-Colunga, E. (2018). The Wilcoxon–Mann–Whitney Procedure Fails as a Test of Medians. The American Statistician, 72(3), 278–286. https://doi.org/10.1080/00031305.2017.1305291 [
+Article The Wilcoxon–Mann–Whitney Procedure Fails as a Test of Medians
+]
+- Conroy, R. M. (2012). What hypotheses do “nonparametric” two-group tests actually test? The Stata Journal, 12(2), 182–190. https://doi.org/10.1177/1536867X1201200202 [
+Article What Hypotheses do “Nonparametric” Two-Group Tests Actually Test?
+]
+- Hart A. (2001). Mann-Whitney test is not just a test of medians: differences in spread can be important. BMJ (Clinical research ed.), 323(7309), 391–393. https://doi.org/10.1136/bmj.323.7309.391 [
+Article Mann-Whitney test is not just a test of medians: differences...
+]
+- Kleinman K, Example 2014.6: Comparing medians and the Wilcoxon rank-sum test [ http://proc-x.com/2014/06/example-2014-6-comparing-medians-and-the-wilcoxon-rank-sum-test/ ]
+- https://stats.stackexchange.com/questions/363335/wilcoxon-signed-rank-test-null-hypothesis-statement
+Plus some toy figures from my various presentations.
+
+Follow the discussion at https://www.researchgate.net/post/Mann-Whitney_Wilcoxon_rank_test_the_null_hypothesis_not_about_medians-in_case_you_needed_the_references?_init=1
+
+---
 
 # Scenario 1: Equal medians, H0 rejected
 ```r
